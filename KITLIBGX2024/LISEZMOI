@@ -1,0 +1,42 @@
+
+==================================================================================
+Octobre 2023
+==================================================================================
+
+E.Incerti - incerti@univ-eiffel.fr
+Universite Gustave Eiffel
+
+==================================================================================
+
+Installation de la biblioth�que graphique <g2x/g3x> , bas�e sur OpenGl (FreeGlut3)
+
+==================================================================================
+
+CONTENU
+- ce fichier README
+
+- un repertoire libg2x.6e/
+  Ce repertoire contient la lib <g2x> version 6e :
+    - un script install_local.sh pour une installation locale (./) (sans droit admin)
+    - un script install_standard.sh pour une installation standard /usr/[lib,include]) (n�cessite droit admin)
+    - un Makefil (ex�cut� automatiquement � l'installation)
+    - un repertoire include/  contient les fichiers d'en-t�te de la lib.
+    - un repertoire src/      contient les fichiers source de la lib.
+    - un repertoire work/     des exemples simples d'utilisation
+      - un repertoire include/ (vide)
+      - un repertoire src/ quelques codes d'exemple
+      - un Makefile
+
+- un repertoire libg3x.6e/
+  Ce repertoire contient la lib <g3x> version 6e :
+    - un script install_local.sh pour une installation locale (./) (sans droit admin)
+    - un script install_standard.sh pour une installation standard /usr/[lib,include]) (n�cessite droit admin)
+    - un Makefil (ex�cut� automatiquement � l'installation)
+    - un repertoire include/  contient les fichiers d'en-t�te de la lib.
+    - un repertoire src/      contient les fichiers source de la lib.
+    - un repertoire work/     des exemples simples d'utilisation
+      - un repertoire include/ (vide)
+      - un repertoire src/ quelques codes d'exemple
+      - un Makefile
+
+==================================================================================
