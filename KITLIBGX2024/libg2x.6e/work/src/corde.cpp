@@ -65,6 +65,7 @@ public:
   void update(float h){
 
     if(!_motion){
+      _f = 0.;
       return;
     }
     switch(_type)
@@ -147,7 +148,7 @@ public:
 
 
   void update(){
-    update_Hook();
+    AlgoRessort();
   }
 
 
@@ -189,6 +190,15 @@ private:
     _leftEntry->_f += F; // distribution sur M1
     _rightEntry->_f -= F; // distribution sur M2
   }
+
+
+  void AlgoRessort()
+  {
+    double d = _rightEntry->_pos.y - _leftEntry->_pos.y;
+    double f = _k * (d - _l0);
+    _leftEntry->_f += f;
+    _rightEntry->_f -= f;
+  }
 };
 
 
@@ -227,9 +237,9 @@ static void init(void)
   g2x_SetWindowCoord(wxmin,wymin,wxmax,wymax);
 
   ctr = (G2Xpoint){0.,0.}; /* positionnement de centre */
-  ray = .5;                /* rayon initial            */
+  ray = .2;                /* rayon initial            */
 
-  parts.size = 12;
+  parts.size = 20;
   links.size = parts.size - 1;
   parts.tab = (Particule *) malloc(sizeof(Particule) * parts.size);
   links.tab = (Link *) malloc(sizeof(Link) * links.size);
@@ -251,6 +261,8 @@ static void init(void)
   for(int i = 0; i < links.size; i++){
     links.tab[i] = Link(parts.tab + (i), parts.tab + (i + 1));
   }
+
+  parts.tab[0]._f = 20;
 }
 
 /* la fonction de contrôle : appelée 1 seule fois, juste APRES <init> */
@@ -260,6 +272,7 @@ static void ctrl(void)
    *  Tout ce qu'il y a ici pourrait être directement écrit dans la fonction init(),
    *  mais c'est plus 'propre' et plus pratique de séparer.
   !*/
+  g2x_CreateScrollh_d("h", &h, (1 / Fe), (1 / Fe) * 100, "rayon en x");
 }
 
 /* la fonction de contrôle : appelée 1 seule fois, juste APRES <init> */
@@ -323,8 +336,11 @@ static void quit(void)
 /***************************************************************************/
 int main(int argc, char **argv)
 {
+
+  char * title = "Rope Simulation";
+
   /* 1°) creation de la fenetre - titre et tailles (pixels) */
-  g2x_InitWindow("Rope Simulation",WWIDTH,WHEIGHT);
+  g2x_InitWindow(title, WWIDTH, WHEIGHT);
   /* 2°) définition de la zone de travail en coord. réeelles *
    *     ATTENTION : veiller à respecter les proportions
    *                 (wxmax-wxmin)/(wymax-wymin) = WWIDTH/WHEIGHT
