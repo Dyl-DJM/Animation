@@ -8,6 +8,16 @@
  * contient les libs C standards et OpenGl */
 #include <g2x.h>
 
+#include <assert.h>
+
+ 
+#define MAX_PARTS 20
+#define MAX_LINKS (MAX_PARTS * 2)
+#define MAX_ELEMENTS MAX_LINKS
+
+const int nbParts = 12;
+const int nbLinkInterParts = nbParts - 1;
+
 
 
 /* tailles de la fenêtre graphique (en pixels)     */
@@ -142,26 +152,52 @@ public:
     _rightEntry {right},
     _k {k},
     _l {0},
-    _l0 {distance(left->_pos, right->_pos)}
+    _l0 {distance(left->_pos, right == NULL ? left->_pos : right->_pos)},
+    _type {0}
+  {
+  }
+
+
+  Link(Particule* M)
+  : _leftEntry {M},
+    _rightEntry {NULL},
+    _k {k},
+    _l {0},
+    _l0 {distance(M->_pos, M->_pos)},
+    _type {1}
   {
   }
 
 
   void update(){
-    AlgoRessort();
+
+    switch(_type){
+
+      // Normal
+      case 0 : {
+        AlgoRessort();
+        break;
+      }
+
+      // External
+      case 1 : {
+        update_external();
+        break;
+      }
+    }
   }
+
 
 
 
 
   void draw(){
-    if(_leftEntry == NULL || _rightEntry == NULL){
-      return;
+    auto secondPoint = (G2Xpoint){_leftEntry->_pos.x, _leftEntry->_pos.y - 2};
+    if(_rightEntry != NULL){
+      secondPoint = _rightEntry->_pos;
     }
-    g2x_DrawLine(_leftEntry->_pos, _rightEntry->_pos, G2Xb, 2);
+    g2x_DrawLine(_leftEntry->_pos, secondPoint, G2Xb, 2);
   }
-
-
 
 
 
@@ -173,6 +209,7 @@ public:
   double _z;
   double _s;
   double _l0;
+  int _type;
 
 
 
@@ -181,6 +218,12 @@ private:
   static double distance(G2Xpoint a, G2Xpoint b){
     return sqrt(pow(b.x - a.x, 2) + pow(b.y - a.y, 2));
   }
+
+
+  void update_external(){
+    _leftEntry->_f -= constF;
+  }
+
 
   void update_Hook()
   {
@@ -199,19 +242,50 @@ private:
     _leftEntry->_f += f;
     _rightEntry->_f -= f;
   }
+
+  constexpr static float constF = 0.0001;
 };
 
 
 
-template<class T>
+template<class T, std::size_t MaxSize>
 struct Storage{
+
+  Storage()
+  : tab {(T*)malloc(sizeof(T) * MaxSize)}
+  {
+  }
+
+  const T& operator[](std::size_t i) const{
+    assert(i < size && "Index out of range.\n");
+    return tab[i];
+  }
+
+
+  T& operator[](std::size_t i){
+    assert(i < size && "Index out of range.\n");
+    return tab[i];
+    stackLastIdx = i > stackLastIdx ? i : stackLastIdx;
+  }
+
+  void pushElement(T elem){
+    size ++;
+    assert(size <= MaxSize && "Couldn't add more elements.\n");
+    assert(stackLastIdx < size && "Index out of range.\n");
+    tab[stackLastIdx] = elem;
+    stackLastIdx ++;
+
+    
+  }
+
+  unsigned int stackLastIdx = 0;
   unsigned int size = 0;
-  T* tab;
+  T * tab;
 };
 
 
-static Storage<Particule> parts;
-static Storage<Link> links;
+static Storage<Particule, MAX_PARTS> parts;
+static Storage<Link, MAX_LINKS> links;
 
 /* -----------------------------------------------------------------------
  * ici, en général pas mal de variables GLOBALES
@@ -239,30 +313,23 @@ static void init(void)
   ctr = (G2Xpoint){0.,0.}; /* positionnement de centre */
   ray = .2;                /* rayon initial            */
 
-  parts.size = 20;
-  links.size = parts.size - 1;
-  parts.tab = (Particule *) malloc(sizeof(Particule) * parts.size);
-  links.tab = (Link *) malloc(sizeof(Link) * links.size);
-
-
   double start = wxmin + 2;
   double end = wxmax - 2;
-  double coef = abs(start - end) / (parts.size - 1);
+  double coef = abs(start - end) / (nbParts - 1);
 
-  for(int i = 0; i < parts.size; i++){
-    if(i % parts.size == 0 || i % parts.size == parts.size - 1){
-      parts.tab[i] = FixPart(start + i * coef, 0, ray, G2Xg);
+  for(int i = 0; i < nbParts; i++){
+    if(i == 0 || i == nbParts - 1){
+      parts.pushElement(FixPart(start + i * coef, 0, ray, G2Xg));
     }else{
-      parts.tab[i] = MotionPart(start + i * coef, 0, ray, G2Xr);
+      parts.pushElement(MotionPart(start + i * coef, 0, ray, G2Xr));
     }
+
+    links.pushElement(Link(parts.tab + (i)));
   }
 
-
-  for(int i = 0; i < links.size; i++){
-    links.tab[i] = Link(parts.tab + (i), parts.tab + (i + 1));
+  for(int i = 0; i < nbLinkInterParts; i++){
+    links.pushElement(Link(parts.tab + (i), parts.tab + (i + 1)));
   }
-
-  parts.tab[0]._f = 20;
 }
 
 /* la fonction de contrôle : appelée 1 seule fois, juste APRES <init> */
