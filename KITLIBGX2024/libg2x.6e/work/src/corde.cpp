@@ -42,7 +42,7 @@ class Particule
 {
 protected:
   Particule(double x, double y, double radius, G2Xcolor col, bool motion)
-      : _type{0}, _col{col}, _rad{radius}, _pos{(G2Xpoint){x, y}}, _m{m}, _f{0}, _speed{0.001}, _motion{motion}
+      : _type{0}, _col{col}, _rad{radius}, _pos{(G2Xpoint){x, y}}, _m{m}, _f{0}, _speed{0.00}, _motion{motion}
   {
   }
 
@@ -54,12 +54,13 @@ public:
 
   void update(float h)
   {
-
     if (!_motion)
     {
+      _speed = 0.; // intégration 1 : vitesse m.F(n) = (V(n+1)-V(n))/h -EXplicite
       _f = 0.;
       return;
     }
+
     switch (_type)
     {
     case 0:
@@ -147,23 +148,21 @@ public:
   {
   }
 
-  void update()
+  void update(float z, float m)
   {
+    _z = z;
 
     switch (_type)
     {
-
-    // Normal
     case 0:
     {
-      AlgoRessort();
+      ressort_frein();
       break;
     }
 
-    // External
     case 1:
     {
-      update_external();
+      update_external(m); // Gravité
       break;
     }
     }
@@ -195,26 +194,47 @@ private:
     return sqrt(pow(b.x - a.x, 2) + pow(b.y - a.y, 2));
   }
 
-  void update_external()
+  void update_external(float m)
   {
-    _leftEntry->_f -= constF;
+    _leftEntry->_f -= constF * m;
   }
 
-  void update_Hook()
-  {
-    float d = distance(_leftEntry->_pos, _rightEntry->_pos); // distance courante ∣∣−−−→
-    double u = 1 / d;                                        // direction M1 → M2
-    double F = -_k * (d - _l0) * u;                          // force de rappel
-    _leftEntry->_f += F;                                     // distribution sur M1
-    _rightEntry->_f -= F;                                    // distribution sur M2
-  }
-
-  void AlgoRessort()
+  void hook()
   {
     double d = _rightEntry->_pos.y - _leftEntry->_pos.y;
     double f = _k * (d - _l0);
     _leftEntry->_f += f;
     _rightEntry->_f -= f;
+  }
+
+  void frein_cinetique()
+  {
+    double speed_diff = _rightEntry->_speed - _leftEntry->_speed;
+    double f = -_z * speed_diff;
+    _leftEntry->_f -= f;
+    _rightEntry->_f += f;
+  }
+
+  void ressort_frein()
+  {
+    double d = _rightEntry->_pos.y - _leftEntry->_pos.y;
+    double speed_diff = _rightEntry->_speed - _leftEntry->_speed;
+    double f = -_k * (d - _l0) - _z * speed_diff;
+    _leftEntry->_f -= f;
+    _rightEntry->_f += f;
+  }
+
+  void cond_ressort_frein()
+  {
+    double d = _rightEntry->_pos.y - _leftEntry->_pos.y;
+    if (d > _s * _l0)
+    {
+      return;
+    }
+    double speed_diff = _rightEntry->_speed - _leftEntry->_speed;
+    double f = -_k * (d - _l0) - _z * speed_diff;
+    _leftEntry->_f -= f;
+    _rightEntry->_f += f;
   }
 
   constexpr static float constF = 0.0001;
@@ -300,6 +320,7 @@ static void init(void)
       parts.pushElement(MotionPart(start + i * coef, 0, ray, G2Xr));
     }
 
+    // Link de gravité
     links.pushElement(Link(parts.tab + (i)));
   }
 
@@ -316,7 +337,9 @@ static void ctrl(void)
    *  Tout ce qu'il y a ici pourrait être directement écrit dans la fonction init(),
    *  mais c'est plus 'propre' et plus pratique de séparer.
   !*/
-  g2x_CreateScrollh_d("h", &h, (1 / Fe), (1 / Fe) * 100, "rayon en x");
+  g2x_CreateScrollh_d("h", &h, (1 / Fe), (1 / Fe) * 100, "Indice de raideur");
+  g2x_CreateScrollh_d("z", &z, 0.0001, 0.1, "Indice de viscosité");
+  g2x_CreateScrollh_d("m", &m, 0, 10., "Valeur de masse");
 }
 
 /* la fonction de contrôle : appelée 1 seule fois, juste APRES <init> */
@@ -326,7 +349,6 @@ static void evts(void)
    *  Tout ce qu'il y a ici pourrait être directement écrit dans la fonction draw(),
    *  mais c'est plus 'propre' et plus pratique de séparer.
   !*/
-  g2x_SetWindowCoord(wxmin, wymin, wxmax, wymax);
 }
 
 /* la fonction de dessin : appelée en boucle (indispensable) */
@@ -361,7 +383,7 @@ static void anim(void)
 
   for (int i = 0; i < links.size; i++)
   {
-    (links.tab[i]).update();
+    (links.tab[i]).update(z, m);
   }
   for (int i = 0; i < parts.size; i++)
   {
