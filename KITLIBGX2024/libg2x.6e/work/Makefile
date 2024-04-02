@@ -32,7 +32,7 @@ src = src/
 # all : g2x_00_squelette g2x_01_control g2x_02_cercle g2x_03_drawfunction\
 #       g2x_04_hsvflower g2x_05_hsvcolor g2x_06_image g2x_REFERENCE
 
-all : corde
+all : flag2D
 
 # règle générique de création de xxx.o à partir de src/xxx.c
 %.o : $(src)%.c.*
