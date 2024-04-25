@@ -28,12 +28,18 @@ PFLAGS = $(incG3X) -I./include
 # répertoire pour les sources .c
 src = src/
 
-all : g3x_00_squelette g3x_01_distdroites g3x_02_GLscene g3x_REFERENCE
+all : flag3D
 
 # règle générique de création de xxx.o à partir de src/xxx.c
 %.o : $(src)%.c
 	@echo "module $@"
 	@$(CC) $(STD) $(CFLAGS) $(PFLAGS) -c $< -o $@
+	@echo "------------------------"
+
+# règle générique de création de xxx.o à partir de src/xxx.c
+%.o : $(src)%.cpp
+	@echo "module $@"
+	@$(CC) $(CFLAGS) $(PFLAGS) -c $< -o $@
 	@echo "------------------------"
 
 # règle générique de création de l'executable xxx à partir de src/xxx.c (1 seul module)
