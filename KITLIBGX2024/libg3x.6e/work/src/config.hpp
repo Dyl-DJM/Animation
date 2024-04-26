@@ -34,9 +34,9 @@ bool state = false;
 static double h = 1. / 100.;
 static double Fe = 1. / h;
 
-static double m = 1.;
-static double k = 0.05;
-static double z = 0.1;
+static double initialM = 1.;
+static double initialK = 0.05;
+static double initialZ = 0.1;
 
 static double gravityIntensity = 0.0001;
 static double windIntensity = 0.0001;

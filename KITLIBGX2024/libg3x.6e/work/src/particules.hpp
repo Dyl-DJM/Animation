@@ -1,12 +1,13 @@
 #pragma once
 
 #include "tools.hpp"
+#include "config.hpp"
 
 class Particule
 {
 protected:
     Particule(double x, double y, double radius, G3Xcolor col, bool motion)
-        : _type{0}, _col{col}, _rad{radius}, _pos{(G3Xpoint){x, y}}, _m{1.}, _f{G3Xvector{0.f, 0.f, 0.f}}, _speed{G3Xvector{0.f, 0.f, 0.f}}, _motion{motion}
+        : _type{0}, _col{col}, _rad{radius}, _pos{(G3Xpoint){x, y}}, _f{G3Xvector{0.f, 0.f, 0.f}}, _speed{G3Xvector{0.f, 0.f, 0.f}}, _motion{motion}
     {
     }
 
@@ -23,12 +24,6 @@ public:
         glutSolidSphere(_rad, 40, 40); /* une sphere (cf. manuel OpenGl) */
         glDisable(GL_BLEND);           /* d�sactive le mode blending */
         glPopMatrix();
-    }
-
-    void addForce(G3Xvector addedForce)
-    {
-        printf("Here\n");
-        _f += addedForce;
     }
 
     void update(float h)
@@ -80,12 +75,14 @@ private:
     // Mot physique
 public:
     G3Xpoint _pos;
-    double _m;
+    static double _m;
     G3Xvector _f;
     G3Xvector _speed;
 
     bool _motion;
 };
+
+double Particule::_m = initialM;
 
 class FixPart : public Particule
 {

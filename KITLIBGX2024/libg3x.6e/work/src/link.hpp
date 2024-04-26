@@ -9,7 +9,6 @@ public:
     Link(Particule *left, Particule *right)
         : _leftEntry{left},
           _rightEntry{right},
-          _k{k},
           _l{0},
           _l0{distance(left->_pos, right == NULL ? left->_pos : right->_pos)},
           _type{0}
@@ -19,17 +18,14 @@ public:
     Link(Particule *M)
         : _leftEntry{M},
           _rightEntry{NULL},
-          _k{k},
           _l{0},
           _l0{distance(M->_pos, M->_pos)},
           _type{1}
     {
     }
 
-    void update(float z, float m)
+    void update()
     {
-        _z = z;
-
         switch (_type)
         {
         case 0:
@@ -40,32 +36,19 @@ public:
 
         case 1:
         {
-            update_external(m); // Gravité
+            update_external(); // Gravité
             break;
         }
         }
     }
 
-    void draw()
-    {
-        G3Xpoint secondPoint;
-        // if (_rightEntry == NULL)
-        // {
-        //     secondPoint = _leftEntry->_pos + (10000 * constF);
-        // }
-        // else
-        // {
-        //     secondPoint = _rightEntry->_pos;
-        // }
-        // g3x_DrawLine(_leftEntry->_pos, secondPoint, G3Xb, 2);
-    }
-
     Particule *_leftEntry;
     Particule *_rightEntry;
 
-    double _k;
+    static double _k;
+    static double _z;
+
     double _l;
-    double _z;
     double _s;
     double _l0;
     int _type;
@@ -76,9 +59,9 @@ private:
         return sqrt(pow(b.x - a.x, 2) + pow(b.y - a.y, 2) + pow(b.z - a.z, 2));
     }
 
-    void update_external(float m)
+    void update_external()
     {
-        _leftEntry->_f += (_constF * m);
+        _leftEntry->_f += (_constF * _leftEntry->_m);
     }
 
     void hook()
@@ -126,6 +109,9 @@ protected:
     G3Xvector _constF = G3Xvector{0.f, 0.f, 0.f};
 };
 
+double Link::_k = initialK;
+double Link::_z = initialZ;
+
 class GravityLink : public Link
 {
 public:
@@ -133,10 +119,10 @@ public:
     {
     }
 
-    void update(float a, float b)
+    void update()
     {
         _constF = G3Xvector{0.f, -_gravityIntensity, 0.f};
-        Link::update(a, b);
+        Link::update();
     }
 
     static double _gravityIntensity;
@@ -151,9 +137,9 @@ public:
     {
     }
 
-    void update(float a, float b)
+    void update()
     {
-        _leftEntry->_f += (G3Xvector{0.f, 0.f, -_windIntensity} * 1 / m);
+        _leftEntry->_f += (G3Xvector{0.f, 0.f, -_windIntensity} * 1 / _leftEntry->_m);
     }
 
     static double _windIntensity;

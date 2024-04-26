@@ -21,18 +21,6 @@ static Storage<Link, nbLinkInterParts> links;
 static Storage<GravityLink, nbParts> gravityLinks;
 static Storage<WindLink, nbParts> windLinks;
 
-void applyWindParts(int intensity, float force)
-{
-    for (int i = 0; i <= intensity; i++)
-    {
-        int x = rand() % nbCols;
-        int y = rand() % nbLines;
-        auto id = (y * nbCols + x);
-
-        parts[id].addForce(G3Xvector{0.f, force, 0.f});
-    }
-}
-
 /* -----------------------------------------------------------------------
  * ici, en général pas mal de variables GLOBALES
  * - les variables de données globales (points, vecteurs....)
@@ -140,9 +128,9 @@ static void ctrl(void)
     * mais c'est plus 'propre' et plus pratique de séparer.
     !*/
     g3x_CreateScrollh_d("h", &h, 0.01, 1, 1, "Pas d'échantillon");
-    g3x_CreateScrollh_d("z", &z, 0.0, 0.1, 1, "Indice de viscosité");
-    g3x_CreateScrollh_d("k", &k, 0.05, 0.5, 1, "Indice de raideur");
-    g3x_CreateScrollh_d("m", &m, 0.5, 3., 1., "Valeur de masse");
+    g3x_CreateScrollh_d("z", &Link::_z, 0.0, 0.1, 1, "Indice de viscosité");
+    g3x_CreateScrollh_d("k", &Link::_k, 0.05, 0.5, 1, "Indice de raideur");
+    g3x_CreateScrollh_d("m", &Particule::_m, 0.5, 3., 1., "Valeur de masse");
     g3x_CreateScrollv_d("w", &WindLink::_windIntensity, -0.001f, 0.001f, 1, "Wind");
     g3x_CreateScrollv_d("g", &GravityLink::_gravityIntensity, 0, 0.001f, 1., "Gravity");
 
@@ -172,8 +160,6 @@ static void draw(void)
     {
         (parts.tab[i]).draw();
     }
-
-    usleep(Fe);
 }
 
 /* la fonction d'animation : appelée en boucle draw/anim/draw/anim... (facultatif) */
@@ -187,16 +173,16 @@ static void anim(void)
 
     for (int i = 0; i < links.size; i++)
     {
-        (links.tab[i]).update(z, m);
+        (links.tab[i]).update();
     }
-    for (int i = 0; i < gravityLinks.size; i++)
+    for (int i = 0; GravityLink::_gravityIntensity != 0 && i < gravityLinks.size; i++)
     {
-        (gravityLinks.tab[i]).update(z, m);
+        (gravityLinks.tab[i]).update();
     }
 
-    for (int i = 0; i < windLinks.size; i++)
+    for (int i = 0; WindLink::_windIntensity != 0 && i < windLinks.size; i++)
     {
-        (windLinks.tab[i]).update(z, m);
+        (windLinks.tab[i]).update();
     }
 
     for (int i = 0; i < parts.size; i++)
